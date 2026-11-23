@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FedGUI-MoE | 移动端个性化 GUI 智能体的三层解耦联邦混合专家框架</title>
+  <meta name="description" content="Three-Tier Decoupled Federated Mixture-of-Experts with Asymmetric History-Dropout and Label-Free Self-Screening for Personalized Mobile GUI Agents." />
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #f1f5f9;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --primary: #1d4ed8;
+      --primary-soft: #dbeafe;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --warn-soft: #fef3c7;
+      --warn-text: #92400e;
+      --shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.68;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(248, 250, 252, 0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 0.98rem;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .lang-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 44px 24px 72px;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto 40px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 3.4vw, 2.55rem);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: #0b132b;
+    }
+
+    .subtitle {
+      font-size: 1.04rem;
+      color: var(--muted);
+      max-width: 800px;
+      margin: 0 auto 22px;
+    }
+
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      padding: 6px 13px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .pill-private {
+      background: var(--warn-soft);
+      border-color: #fde68a;
+      color: var(--warn-text);
+      font-weight: 600;
+    }
+
+    /* Stat Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 42px;
+    }
+
+    @media (max-width: 860px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .stat-delta {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    /* Section */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      font-size: 1.28rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 22px;
+    }
+
+    /* Architecture SVG wrapper */
+    .arch-wrap {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+
+    .arch-wrap svg {
+      display: block;
+      width: 100%;
+      min-width: 760px;
+      height: auto;
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 740px) {
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pillar {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: #fcfdff;
+    }
+
+    .pillar h3 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+
+    .pillar p {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    /* Tabs & Tables */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      min-width: 680px;
+    }
+
+    th, td {
+      padding: 11px 14px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th:first-child, td:first-child,
+    th:nth-child(2), td:nth-child(2) {
+      text-align: left;
+    }
+
+    thead th {
+      background: var(--surface-alt);
+      color: #1e293b;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.01em;
+    }
+
+    tr.highlight-row {
+      background: #eff6ff;
+      font-weight: 600;
+    }
+
+    tr.highlight-row td {
+      color: #0f172a;
+    }
+
+    .best {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .bad {
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    .footnote {
+      margin-top: 12px;
+      font-size: 0.81rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* Bar chart comparison for History-Drop */
+    .bars-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 740px) {
+      .bars-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .bar-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: #f8fafc;
+    }
+
+    .bar-box h4 {
+      font-size: 0.92rem;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .bar-row {
+      margin-bottom: 10px;
+    }
+
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+
+    .bar-track {
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .fill-ours {
+      background: linear-gradient(90deg, #2563eb, #0d9488);
+    }
+
+    .fill-base {
+      background: #94a3b8;
+    }
+
+    .fill-warn {
+      background: #ef4444;
+    }
+
+    /* Findings */
+    .findings-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .findings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .finding-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .finding-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .finding-card h3 {
+      font-size: 0.98rem;
+      margin-bottom: 8px;
+    }
+
+    .finding-card p {
+      font-size: 0.87rem;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      padding-top: 18px;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85em;
+      background: var(--surface-alt);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    [data-lang="en"] { display: none; }
+    body.lang-en [data-lang="zh"] { display: none; }
+    body.lang-en [data-lang="en"] { display: revert; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span>FedGUI-MoE · Research Showcase</span>
+      </div>
+      <div class="nav-actions">
+        <button class="lang-btn" id="langToggle" type="button" onclick="toggleLang()">English / 中文</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="eyebrow">
+        <span data-lang="zh">联邦个性化多模态 GUI 智能体 · 阶段成果简介</span>
+        <span data-lang="en">Federated Personalized Mobile GUI Agents · Research Summary</span>
+      </div>
+
+      <h1 data-lang="zh">移动端个性化 GUI 智能体的<br/>三层解耦联邦混合专家框架（FedGUI-MoE）</h1>
+      <h1 data-lang="en">Three-Tier Decoupled Federated Mixture-of-Experts<br/>for Personalized Mobile GUI Agents</h1>
+
+      <p class="subtitle" data-lang="zh">
+        针对移动端模糊日常指令下的<strong>“上下文捷径饥饿”</strong>、<strong>“结构化动作内语法与习惯耦合”</strong>及<strong>“端侧无标注偶发噪声污染”</strong>三大核心难题，在不增加客户端私有存储（<code>1.00×</code>）与通信开销（<code>1.01×</code>）的前提下，实现跨中英双应用生态与 <code>2B / 4B / 8B</code> 全尺度的无标签联邦个性化突破。
+      </p>
+      <p class="subtitle" data-lang="en">
+        Addressing <strong>In-Context Shortcut Starvation</strong>, <strong>Intra-Action Syntax–Habit Coupling</strong>, and <strong>Unlabeled On-Device Stream Outliers</strong> under strict <code>1.00×</code> client private storage and <code>1.01×</code> communication parity across Chinese and International mobile ecosystems (<code>GUI-Owl-1.5</code> <code>2B / 4B / 8B</code>).
+      </p>
+
+      <div class="meta-pills">
+        <span class="pill pill-private">
+          <span data-lang="zh">🔒 核心代码仓库：私有保护（论文投稿准备期，发表后开源）</span>
+          <span data-lang="en">🔒 Source Repository: Private (Under Manuscript Preparation)</span>
+        </span>
+        <span class="pill">
+          <span data-lang="zh">🛡️ 零隐私特征上传 · 测试集严格封存</span>
+          <span data-lang="en">🛡️ Zero Private Feature Upload · Sealed Test Untouched</span>
+        </span>
+        <span class="pill">
+          <span data-lang="zh">📊 基座：GUI-Owl-1.5 (2B / 4B / 8B) · 3 随机种子复现</span>
+          <span data-lang="en">📊 Backbones: GUI-Owl-1.5 (2B / 4B / 8B) · 3-Seed Verified</span>
+        </span>
+      </div>
+    </section>
+
+    <!-- Headline Metrics -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">77.03%</div>
+        <div class="stat-delta" data-lang="zh">+9.24 pp 超越 FDLoRA (F2)</div>
+        <div class="stat-delta" data-lang="en">+9.24 pp vs. FDLoRA (F2)</div>
+        <div class="stat-label" data-lang="zh">中文真实纵向流（FingerTip-20K，4B 三种子均值 <code>±2.57%</code>）隐式偏好单步成功率 <code>Pref-SSR</code>，6/6 种子全胜</div>
+        <div class="stat-label" data-lang="en">Implicit preference SSR on longitudinal Chinese <code>FingerTip-20K</code> (<code>4B</code> 3-seed mean <code>±2.57%</code>), winning all seeds</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value">73.61%</div>
+        <div class="stat-delta" data-lang="zh">+5.83 pp 超越 FDLoRA (F2)</div>
+        <div class="stat-delta" data-lang="en">+5.83 pp vs. FDLoRA (F2)</div>
+        <div class="stat-label" data-lang="zh">英文国际生态（AndroidControl-Persona，4B 三种子均值 <code>±1.73%</code>）隐式偏好单步成功率 <code>Pref-SSR</code></div>
+        <div class="stat-label" data-lang="en">Implicit preference SSR on international <code>AndroidControl-Persona</code> (<code>4B</code> 3-seed mean <code>±1.73%</code>)</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value">4.86×–9.17×</div>
+        <div class="stat-delta" data-lang="zh">突破上下文捷径饥饿</div>
+        <div class="stat-delta" data-lang="en">Parametric Habit Retention</div>
+        <div class="stat-label" data-lang="zh">零检索历史冷启动（<code>Drop-100%</code>）纯参数准确率：CN 4B <code>55.74% vs 11.48%</code>，EN 8B <code>45.83% vs 5.00%</code></div>
+        <div class="stat-label" data-lang="en">Zero-history cold-start SSR (<code>Drop-100%</code>): CN 4B <code>55.74% vs. 11.48%</code>; EN 8B <code>45.83% vs. 5.00%</code></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value">1.01×</div>
+        <div class="stat-delta" data-lang="zh">88.9% 偶发异常无标签拦截</div>
+        <div class="stat-delta" data-lang="en">88.9% Label-Free Outlier Block</div>
+        <div class="stat-label" data-lang="zh">Top-1 主导域切片稀疏上传（3 轮共 <code>171.47 MB</code> vs 基线 <code>170.13 MB</code>），客户端私有参数严格 <code>1.00×</code> 等量</div>
+        <div class="stat-label" data-lang="en">Top-1 dominant-domain sparse upload (<code>171.47 MB</code> vs. <code>170.13 MB</code> over 3 rounds) at exact <code>1.00×</code> private storage</div>
+      </div>
+    </section>
+
+    <!-- Method Architecture -->
+    <section class="section">
+      <h2 class="section-title">
+        <span data-lang="zh">一、核心方法架构：三层解耦联邦 MoE 与四项原创机制</span>
+        <span data-lang="en">1. Architecture: Three-Tier Decoupled Federated MoE</span>
+      </h2>
+      <p class="section-desc" data-lang="zh">
+        不同于通用文本联邦微调，移动端 GUI 动作具有严格的 <code>&lt;tool_call&gt;{"action": "open", "app": "..."}&lt;/tool_call&gt;</code> 结构化语法，且真实用户端侧交互流无人工偏好标签、混杂偶发反向操作（如惯用 Spotify 的用户临时点开一次 YouTube Music）。本框架通过四项协同机制实现精准解耦：
+      </p>
+      <p class="section-desc" data-lang="en">
+        Mobile GUI agents emit structured <code>&lt;tool_call&gt;</code> actions where universal UI syntax and user-conflicting app/entity choices coexist within a single sequence, trained over noisy, unlabeled on-device streams. FedGUI-MoE resolves this via four synergistic mechanisms:
+      </p>
+
+      <div class="arch-wrap">
+        <svg viewBox="0 0 920 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FedGUI-MoE Architecture Diagram">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+            </marker>
+          </defs>
+          <!-- Input Box -->
+          <rect x="16" y="58" width="175" height="154" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+          <text x="103" y="88" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">端侧当前决策状态</text>
+          <text x="103" y="108" text-anchor="middle" font-size="11" fill="#475569">Screen + Underspecified Task</text>
+          <rect x="30" y="122" width="147" height="34" rx="6" fill="#f1f5f9"/>
+          <text x="103" y="143" text-anchor="middle" font-size="11" fill="#334155">检索历史 H (可缺失)</text>
+          <rect x="30" y="164" width="147" height="34" rx="6" fill="#fef3c7"/>
+          <text x="103" y="185" text-anchor="middle" font-size="11" fill="#92400e">含 15% 偶发反向噪声</text>
+
+          <!-- Router & Gate Column -->
+          <rect x="232" y="24" width="215" height="98" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.6"/>
+          <text x="339" y="50" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">① 分语种去均值公开锚点路由</text>
+          <text x="339" y="70" text-anchor="middle" font-size="11" fill="#1e40af">冻结 VLM 高层隐状态 · K=4 宏观域</text>
+          <text x="339" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">余弦 0.9955 → -0.3222 (间隔 153.6×)</text>
+          <text x="339" y="106" text-anchor="middle" font-size="10.5" fill="#475569">中/英留一准确率 90.0% · 零特征上传</text>
+
+          <rect x="232" y="144" width="215" height="102" rx="12" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.6"/>
+          <text x="339" y="170" text-anchor="middle" font-size="12.5" font-weight="700" fill="#115e59">② 无标签双准则筛选 &amp; 结构门控</text>
+          <text x="339" y="190" text-anchor="middle" font-size="11" fill="#0f766e">横向众包惊讶度 × 纵向子簇衰减占优</text>
+          <text x="339" y="208" text-anchor="middle" font-size="11" fill="#0f766e">双层阻断偶发异常 (拦截率 88.9%)</text>
+          <text x="339" y="226" text-anchor="middle" font-size="10.5" fill="#475569">可观测结构线索门控 g(x) ∈ [0, 1]</text>
+
+          <!-- Three-Tier LoRA Bank -->
+          <rect x="492" y="18" width="228" height="68" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.6"/>
+          <text x="606" y="43" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">Tier 1 · 全局通用层 B_glob (r=3)</text>
+          <text x="606" y="62" text-anchor="middle" font-size="11" fill="#475569">全员聚合 · 通用点击定位与工具骨架语法</text>
+
+          <rect x="492" y="100" width="228" height="68" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
+          <text x="606" y="125" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">Tier 2 · 领域共享专家 B_dom[1..4] (r=1)</text>
+          <text x="606" y="144" text-anchor="middle" font-size="11" fill="#1e40af">Top-1 主导域稀疏上传 (仅 1.01× 通信)</text>
+
+          <rect x="492" y="182" width="228" height="72" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8"/>
+          <text x="606" y="206" text-anchor="middle" font-size="12.5" font-weight="700" fill="#065f46">Tier 3 · 本地私有层 B_priv (r=4)</text>
+          <text x="606" y="224" text-anchor="middle" font-size="11" fill="#047857">70% 零历史遮蔽视图 · 永不离端 (1.00× 存储)</text>
+          <text x="606" y="241" text-anchor="middle" font-size="10.5" fill="#0f766e">三组独立梯度裁剪 · 沉淀纯参数习惯</text>
+
+          <!-- Output Box -->
+          <rect x="760" y="68" width="144" height="134" rx="12" fill="#0f172a"/>
+          <text x="832" y="102" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">个性化 GUI 动作</text>
+          <text x="832" y="124" text-anchor="middle" font-size="10.5" fill="#93c5fd">&lt;tool_call&gt; 骨架稳健</text>
+          <text x="832" y="144" text-anchor="middle" font-size="10.5" fill="#5eead4">个人习惯 App 精准命中</text>
+          <text x="832" y="164" text-anchor="middle" font-size="10.5" fill="#cbd5e1">冷启动无历史照常生效</text>
+          <text x="832" y="184" text-anchor="middle" font-size="10.5" fill="#fde68a">通用界面操作零漂移</text>
+
+          <!-- Connectors -->
+          <line x1="191" y1="102" x2="228" y2="76" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <line x1="191" y1="164" x2="228" y2="188" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <line x1="191" y1="58" x2="488" y2="48" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+          <line x1="447" y1="74" x2="488" y2="128" stroke="#3b82f6" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <line x1="447" y1="196" x2="488" y2="216" stroke="#10b981" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <line x1="720" y1="52" x2="756" y2="104" stroke="#64748b" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <line x1="720" y1="134" x2="756" y2="134" stroke="#3b82f6" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <line x1="720" y1="216" x2="756" y2="166" stroke="#10b981" stroke-width="1.6" marker-end="url(#arrow)"/>
+        </svg>
+      </div>
+
+      <div class="pillars-grid">
+        <div class="pillar">
+          <h3 data-lang="zh">1. 双视图非对称历史遮蔽（Asymmetric History-Dropout）</h3>
+          <h3 data-lang="en">1. Dual-View Asymmetric History-Dropout</h3>
+          <p data-lang="zh">在核验习惯步上以 <code>70%</code> 零历史完整序列视图 + 值段对比边际训练本地私有层，切断“照抄提示词历史”捷径，迫使私有适配器建立真正的参数化习惯记忆。</p>
+          <p data-lang="en">Trains the private adapter with a <code>70%</code> history-masked full-sequence view plus value-span margin, eliminating context-copying shortcuts and building genuine parametric memory.</p>
+        </div>
+
+        <div class="pillar">
+          <h3 data-lang="zh">2. BPE 安全的亚句级隔离与双层异常阻断</h3>
+          <h3 data-lang="en">2. BPE-Safe Span Isolation &amp; Dual-Tier Outlier Blocking</h3>
+          <p data-lang="zh">通过哨兵探针精确剥离 <code>&lt;tool_call&gt;</code> 工具骨架与分叉参数值；对无标签筛出的偶发反向样本同时阻断私有与共享层的参数值更新，根除“反向异常倒灌”。</p>
+          <p data-lang="en">Uses sentinel probes to separate shared tool syntax from user-specific argument spans; blocks detected one-off outliers from both private and shared value updates.</p>
+        </div>
+
+        <div class="pillar">
+          <h3 data-lang="zh">3. 分语种折叠去均值 VLM 语义路由</h3>
+          <h3 data-lang="en">3. Language-Folded Mean-Centered VLM Routing</h3>
+          <p data-lang="zh">仅基于公开锚点按中/英语种独立拟合公共均值中心，将冻结 VLM 隐空间原型余弦从 <code>0.9955</code> 压降至 <code>-0.3222</code>，判别间隔放大 <code>153.6×</code>，零私人特征上传。</p>
+          <p data-lang="en">Calibrates language-specific public centers without touching client data, reducing off-diagonal prototype cosine from <code>0.9955</code> to <code>-0.3222</code> (<code>153.6×</code> margin gain).</p>
+        </div>
+
+        <div class="pillar">
+          <h3 data-lang="zh">4. 统一秩分配与 Top-1 主导域稀疏上传</h3>
+          <h3 data-lang="en">4. Unified Budget &amp; Top-1 Dominant Sparse Upload</h3>
+          <p data-lang="zh">采用 <code>Global(r=3) + DomainShared(4×r=1) + Private(r=4)</code>，每轮仅上传全局层与单一主导域专家（总秩 <code>4</code>），实现与单域 <code>FDLoRA (F2)</code> 严格 <code>1.00×</code> 存储与 <code>1.01×</code> 通信对齐。</p>
+          <p data-lang="en">Allocates <code>Global(3) + Shared(4×1) + Private(4)</code> and uploads only <code>Global</code> plus the client's top-1 dominant domain slice per round (<code>3+1=4</code> rank parity).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Benchmark Results -->
+    <section class="section">
+      <h2 class="section-title">
+        <span data-lang="zh">二、双生态与多尺度实验结果（顶会五维标准评估）</span>
+        <span data-lang="en">2. Dual-Ecosystem &amp; Multi-Scale Benchmark Results</span>
+      </h2>
+      <p class="section-desc" data-lang="zh">
+        严格对齐 <code>OS-Atlas (ICLR 2025)</code> 与 <code>PersonalAlign (ACL 2026)</code> 评测规范，在训练集含 <code>15%</code> 偶发反向操作且无人工偏好标签条件下，评估动作类型准确率（<code>Type</code>）、偏好步单步成功率（<code>Pref-SSR</code>）、通用步成功率（<code>Gen-SSR</code>）、多步轨迹累积成功率（<code>CSR</code>）与累计上传通信量（<code>Comm. MB</code>）。
+      </p>
+      <p class="section-desc" data-lang="en">
+        Evaluated on 5 community-standard metrics (<code>Type</code>, <code>Pref-SSR</code>, <code>Gen-SSR</code>, multi-step <code>CSR</code> following ACL 2026 PersonalAlign, and 3-round client upload <code>Comm. MB</code>) under <code>15%</code> unlabeled training-stream preference outliers.
+      </p>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(event, 'tab-4b')">
+          <span data-lang="zh">主力模型 4B（三种子 Mean ± SD）</span>
+          <span data-lang="en">4B Main Table (3-Seed Mean ± SD)</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-scale')">
+          <span data-lang="zh">多尺度扩展曲线（2B / 4B / 8B）</span>
+          <span data-lang="en">Scaling Law (2B / 4B / 8B)</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-drop')">
+          <span data-lang="zh">上下文捷径饥饿诊断（History-Drop）</span>
+          <span data-lang="en">Shortcut Starvation (History-Drop)</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: 4B 3-Seed -->
+      <div id="tab-4b" class="tab-panel active">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ecosystem / Benchmark</th>
+                <th>Method (<code>GUI-Owl-1.5-4B</code>, 3 Seeds)</th>
+                <th>Type (%)</th>
+                <th>Pref-SSR (%)</th>
+                <th>Gen-SSR (%)</th>
+                <th>CSR (%)</th>
+                <th>Comm. (MB)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="4"><strong>CN · FingerTip-20K</strong><br/><span style="font-size:0.78rem;color:#64748b;">Real Longitudinal Users<br/>608 Trajectory Steps</span></td>
+                <td><code>Frozen</code> (Zero-Shot + Retrieved)</td>
+                <td>79.50</td>
+                <td>53.78</td>
+                <td>19.17</td>
+                <td>38.19</td>
+                <td>0.00</td>
+              </tr>
+              <tr>
+                <td><code>FDLoRA / F2</code> (Shared + Always-On Private)</td>
+                <td>80.75 ± 0.42</td>
+                <td>67.79 ± 1.75</td>
+                <td class="best">25.55 ± 0.48</td>
+                <td>45.57 ± 1.15</td>
+                <td>170.13 ± 0.00</td>
+              </tr>
+              <tr>
+                <td><code>Dynamic-Gate</code> (Oracle Gate Label Ref.)</td>
+                <td class="best">81.03 ± 1.28</td>
+                <td>70.31 ± 3.39</td>
+                <td>23.33 ± 1.44</td>
+                <td>46.07 ± 1.59</td>
+                <td>170.13 ± 0.00</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (V3.1, Label-Free)</code></strong></td>
+                <td>80.75 ± 0.73</td>
+                <td class="best">77.03 ± 2.57</td>
+                <td>23.89 ± 1.27</td>
+                <td class="best">47.94 ± 1.11</td>
+                <td>171.47 ± 0.00</td>
+              </tr>
+              <tr>
+                <td rowspan="4"><strong>EN · AndroidControl-Persona</strong><br/><span style="font-size:0.78rem;color:#64748b;">4-Domain Global Apps<br/>471 Trajectory Steps</span></td>
+                <td><code>Frozen</code> (Zero-Shot + Retrieved)</td>
+                <td>35.83</td>
+                <td>0.00</td>
+                <td>55.00</td>
+                <td>31.41</td>
+                <td>0.00</td>
+              </tr>
+              <tr>
+                <td><code>FDLoRA / F2</code> (Shared + Always-On Private)</td>
+                <td class="best">86.39 ± 0.86</td>
+                <td>67.78 ± 2.41</td>
+                <td class="best">56.39 ± 0.96</td>
+                <td class="best">62.01 ± 2.07</td>
+                <td>170.11 ± 0.02</td>
+              </tr>
+              <tr>
+                <td><code>Dynamic-Gate</code> (Oracle Gate Label Ref.)</td>
+                <td>80.84 ± 0.72</td>
+                <td>69.72 ± 1.27</td>
+                <td>47.50 ± 1.44</td>
+                <td>56.03 ± 2.34</td>
+                <td>170.11 ± 0.02</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (V3.1, Label-Free)</code></strong></td>
+                <td>80.83 ± 1.50</td>
+                <td class="best">73.61 ± 1.73</td>
+                <td>46.95 ± 2.55</td>
+                <td>58.64 ± 0.45</td>
+                <td>171.45 ± 0.02</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Multi-Scale 2B / 4B / 8B -->
+      <div id="tab-scale" class="tab-panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ecosystem &amp; Scale</th>
+                <th>Method (<code>seed=42</code>, 3 Rounds)</th>
+                <th>Type (%)</th>
+                <th>Pref-SSR (%)</th>
+                <th>Gen-SSR (%)</th>
+                <th>CSR (%)</th>
+                <th>Drop-100% SSR (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="2"><strong>CN · 2B</strong></td>
+                <td><code>FDLoRA / F2</code></td>
+                <td class="best">78.66</td>
+                <td>63.87</td>
+                <td class="best">15.00</td>
+                <td class="best">44.77</td>
+                <td class="bad">15.97</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (Ours)</code></strong></td>
+                <td>78.24</td>
+                <td class="best">68.91 (+5.04)</td>
+                <td class="best">15.00</td>
+                <td>44.51</td>
+                <td class="best">61.34 (3.84×)</td>
+              </tr>
+              <tr>
+                <td rowspan="2"><strong>CN · 4B</strong></td>
+                <td><code>FDLoRA / F2</code></td>
+                <td class="best">81.17</td>
+                <td>66.39</td>
+                <td class="best">25.00</td>
+                <td>44.30</td>
+                <td class="bad">11.76</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (Ours)</code></strong></td>
+                <td>80.33</td>
+                <td class="best">74.79 (+8.40)</td>
+                <td>22.50</td>
+                <td class="best">47.19 (+2.89)</td>
+                <td class="best">54.62 (4.64×)</td>
+              </tr>
+              <tr>
+                <td rowspan="2"><strong>CN · 8B</strong></td>
+                <td><code>FDLoRA / F2</code></td>
+                <td>74.48</td>
+                <td>63.87</td>
+                <td>19.17</td>
+                <td>42.20</td>
+                <td class="bad">13.45</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (Ours)</code></strong></td>
+                <td class="best">78.66 (+4.18)</td>
+                <td class="best">69.75 (+5.88)</td>
+                <td class="best">23.33 (+4.16)</td>
+                <td class="best">45.87 (+3.67)</td>
+                <td class="best">46.22 (3.44×)</td>
+              </tr>
+              <tr>
+                <td rowspan="2"><strong>EN · 2B</strong></td>
+                <td><code>FDLoRA / F2</code></td>
+                <td class="best">85.42</td>
+                <td>61.67</td>
+                <td>43.33</td>
+                <td>52.13</td>
+                <td class="bad">12.50</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (Ours)</code></strong></td>
+                <td>80.83</td>
+                <td class="best">74.17 (+12.50)</td>
+                <td class="best">45.00 (+1.67)</td>
+                <td class="best">62.02 (+9.89)</td>
+                <td class="best">49.17 (3.93×)</td>
+              </tr>
+              <tr>
+                <td rowspan="2"><strong>EN · 4B</strong></td>
+                <td><code>FDLoRA / F2</code></td>
+                <td class="best">85.42</td>
+                <td>65.00</td>
+                <td class="best">55.83</td>
+                <td class="best">59.71</td>
+                <td class="bad">20.00</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (Ours)</code></strong></td>
+                <td>79.17</td>
+                <td class="best">74.17 (+9.17)</td>
+                <td>44.17</td>
+                <td>58.35</td>
+                <td class="best">56.67 (2.83×)</td>
+              </tr>
+              <tr>
+                <td rowspan="2"><strong>EN · 8B</strong></td>
+                <td><code>FDLoRA / F2</code></td>
+                <td class="best">76.67</td>
+                <td class="best">64.17</td>
+                <td class="best">46.67</td>
+                <td class="best">51.04</td>
+                <td class="bad">5.00</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong><code>FedGUI-MoE (Ours)</code></strong></td>
+                <td>69.58</td>
+                <td>59.17</td>
+                <td>45.00</td>
+                <td>49.82</td>
+                <td class="best">45.83 (9.17×)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 3: History-Drop Starvation Visual -->
+      <div id="tab-drop" class="tab-panel">
+        <div class="bars-grid">
+          <div class="bar-box">
+            <h4 data-lang="zh">中文 FingerTip-20K（4B 三种子均值）：零历史冷启动 <code>Drop-100% SSR</code></h4>
+            <h4 data-lang="en">CN FingerTip-20K (4B 3-Seed Mean): Zero-History <code>Drop-100% SSR</code></h4>
+
+            <div class="bar-row">
+              <div class="bar-meta"><span><strong>FedGUI-MoE (Ours)</strong></span><span class="best">55.74% (留存 72.4%)</span></div>
+              <div class="bar-track"><div class="bar-fill fill-ours" style="width: 72.4%"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-meta"><span>Frozen Base (未微调基座)</span><span>15.97%</span></div>
+              <div class="bar-track"><div class="bar-fill fill-base" style="width: 20.7%"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-meta"><span>Dynamic-Gate (有监督门控)</span><span class="bad">12.60% (&lt; Frozen!)</span></div>
+              <div class="bar-track"><div class="bar-fill fill-warn" style="width: 16.4%"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-meta"><span>FDLoRA / F2 (传统共享+私有)</span><span class="bad">11.48% (&lt; Frozen!)</span></div>
+              <div class="bar-track"><div class="bar-fill fill-warn" style="width: 14.9%"></div></div>
+            </div>
+          </div>
+
+          <div class="bar-box">
+            <h4 data-lang="zh">英文 AndroidControl-Persona（8B）：模型越大，传统方法抄写饥饿越严重</h4>
+            <h4 data-lang="en">EN AndroidControl-Persona (8B): Larger Backbones Worsen Shortcut Starvation</h4>
+
+            <div class="bar-row">
+              <div class="bar-meta"><span><strong>FedGUI-MoE (Ours, 8B)</strong></span><span class="best">45.83% (留存 77.5%)</span></div>
+              <div class="bar-track"><div class="bar-fill fill-ours" style="width: 71.4%"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-meta"><span>Dynamic-Gate (8B)</span><span class="bad">5.83% (留存仅 13.2%)</span></div>
+              <div class="bar-track"><div class="bar-fill fill-warn" style="width: 9.1%"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-meta"><span>FDLoRA / F2 (8B)</span><span class="bad">5.00% (留存仅 7.8%!)</span></div>
+              <div class="bar-track"><div class="bar-fill fill-warn" style="width: 7.8%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="footnote" data-lang="zh">
+        <strong>实验严谨性声明：</strong>以上全部指标均基于严格无泄漏的验证划分多步轨迹计算（<code>FingerTip-20K</code> 用户内时序切分验证集与 <code>AndroidControl</code> 官方非测试分片受控多域画像，种子 <code>42 / 3407 / 2026</code>）。官方 <code>test</code> 划分与 <code>PersonalAlign</code> 775 条密封目标会话全程零触碰，留作全基座冻结后的一次性终测。
+      </p>
+      <p class="footnote" data-lang="en">
+        <strong>Protocol Disclosure:</strong> All metrics above are audited on strictly zero-leakage validation trajectories (chronological per-user validation split on <code>FingerTip-20K</code> and non-test official shards on <code>AndroidControl-Persona</code> across seeds <code>42, 3407, 2026</code>). Official <code>test</code> splits and all 775 held-out <code>PersonalAlign</code> sessions remain strictly sealed.
+      </p>
+    </section>
+
+    <!-- Key Scientific Findings -->
+    <section class="section">
+      <h2 class="section-title">
+        <span data-lang="zh">三、三项关键科学发现</span>
+        <span data-lang="en">3. Three Key Empirical Findings</span>
+      </h2>
+      <div class="findings-grid">
+        <div class="finding-card">
+          <div class="finding-tag">Finding 01 · Scaling Law</div>
+          <h3 data-lang="zh">上下文捷径饥饿反尺度律</h3>
+          <h3 data-lang="en">In-Context Shortcut Starvation Law</h3>
+          <p data-lang="zh">在常规联邦微调（<code>F2</code>）中，基座从 <code>2B</code> 增至 <code>8B</code> 时，更强的上下文复述能力使共享层迅速靠“抄写提示词历史”压低训练损失，反而剥夺本地私有适配器的有效梯度（<code>EN 8B</code> 零历史准确率跌至 <code>5.00%</code>，<code>CN 4B</code> 甚至低于未训练基座）。非对称历史遮蔽将该留存率恢复至 <code>66.3%–89.0%</code>。</p>
+          <p data-lang="en">As VLM backbones scale from <code>2B</code> to <code>8B</code>, stronger in-context copying starves local private adapters of gradient signal under standard pFL (<code>F2</code> drops to <code>5.00%</code> zero-history SSR at <code>8B</code>, and below the frozen base on <code>CN 4B</code>). Asymmetric History-Dropout restores <code>66.3%–89.0%</code> retention.</p>
+        </div>
+
+        <div class="finding-card">
+          <div class="finding-tag">Finding 02 · Noise Robustness</div>
+          <h3 data-lang="zh">反向异常倒灌现象与双层阻断</h3>
+          <h3 data-lang="en">Anti-History Outlier Leakage</h3>
+          <p data-lang="zh">若仅用互补权重 <code>(1 - c_t)</code> 将被私有层拒收的 15% 偶发反向样本导流至共享层，会导致共享层集中学习“违背上下文历史”的反向映射并引发 <code>Oracle &lt; No-Screen</code> 倒挂。双层取值阻断切断异常参数值向双支路的泄漏，无标签拦截 <code>88.9%</code> 异常并消除上界倒挂。</p>
+          <p data-lang="en">Routing rejected stream outliers into shared adapters via complementary <code>(1 - c_t)</code> weights poisons shared context-following and triggers <code>Oracle &lt; No-Screen</code> inversion. Dual-tier value blocking intercepts <code>88.9%</code> of outliers without labels and restores monotonic gains.</p>
+        </div>
+
+        <div class="finding-card">
+          <div class="finding-tag">Finding 03 · Representation</div>
+          <h3 data-lang="zh">多语种 VLM 隐空间锥塌缩消除</h3>
+          <h3 data-lang="en">Multilingual Cone-Collapse Removal</h3>
+          <p data-lang="zh">冻结多模态基座的原始任务隐向量呈高度各向异性锥塌缩（跨领域余弦达 <code>0.9955</code>），且混合单均值受语种偏移主导。仅用公开描述执行中/英分语种均值折叠中心化，无需上传任何本地特征即可实现双语 <code>90.0%</code> 留一路由准确率。</p>
+          <p data-lang="en">Raw frozen VLM task embeddings suffer severe cone collapse (<code>0.9955</code> off-diagonal cosine) and language-axis dominance. Language-folded public-anchor mean centering achieves <code>90.0%</code> bilingual leave-one-out routing accuracy with zero client feature upload.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p data-lang="zh">© 2026 Hao Sun · 本页面仅公开阶段性学术成果摘要，完整训练/评测源码与脱敏复现套件保存在私有研究仓库，将于论文正式发表后开源。</p>
+      <p data-lang="en">© 2026 Hao Sun · Public Research Summary Page. Full training/evaluation source code and anonymized reproducibility artifacts remain in a private repository during peer review and will be released upon publication.</p>
+    </footer>
+  </main>
+
+  <script>
+    function toggleLang() {
+      document.body.classList.toggle('lang-en');
+    }
+
+    function switchTab(evt, panelId) {
+      var buttons = document.querySelectorAll('.tab-btn');
+      var panels = document.querySelectorAll('.tab-panel');
+      buttons.forEach(function (b) { b.classList.remove('active'); });
+      panels.forEach(function (p) { p.classList.remove('active'); });
+      evt.currentTarget.classList.add('active');
+      document.getElementById(panelId).classList.add('active');
+    }
+  </script>
+</body>
+</html>
